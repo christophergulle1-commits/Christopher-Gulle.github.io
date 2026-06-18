@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missing & Stray Animal Finder</title>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        background: #f5f5f5;
+        padding: 20px;
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    h1 {
+        color: #2c3e50;
+    }
+
+    .container {
+        max-width: 1000px;
+        margin: auto;
+    }
+
+    .form-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 10px;
+        margin-top: 8px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+    }
+
+    button {
+        background: #27ae60;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #219150;
+    }
+
+    .animals {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .card img {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+    }
+
+    .card-content {
+        padding: 15px;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        color: white;
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .missing {
+        background: #e74c3c;
+    }
+
+    .stray {
+        background: #f39c12;
+    }
+
+    .date {
+        color: gray;
+        font-size: 12px;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>🐾 Missing & Stray Animal Finder</h1>
+    <p>Help reunite pets with their families.</p>
+</header>
+
+<div class="container">
+
+    <div class="form-card">
+        <h2>Add Animal Report</h2>
+
+        <form id="animalForm">
+            <label>Type</label>
+            <select id="type" required>
+                <option value="Missing">Missing Pet</option>
+                <option value="Stray">Stray Animal</option>
+            </select>
+
+            <label>Animal Name (optional)</label>
+            <input type="text" id="name">
+
+            <label>Location</label>
+            <input type="text" id="location" required>
+
+            <label>Description</label>
+            <textarea id="description" rows="4" required></textarea>
+
+            <label>Photo</label>
+            <input type="file" id="photo" accept="image/*" required>
+
+            <button type="submit">Post Report</button>
+        </form>
+    </div>
+
+    <div class="animals" id="animalList"></div>
+
+</div>
+
+<script>
+const form = document.getElementById("animalForm");
+const animalList = document.getElementById("animalList");
+
+let animals = JSON.parse(localStorage.getItem("animals")) || [];
+
+function saveAnimals() {
+    localStorage.setItem("animals", JSON.stringify(animals));
+}
+
+function displayAnimals() {
+    animalList.innerHTML = "";
+
+    animals.reverse().forEach(animal => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <img src="${animal.photo}" alt="Animal">
+            <div class="card-content">
+                <span class="badge ${animal.type === 'Missing' ? 'missing' : 'stray'}">
+                    ${animal.type}
+                </span>
+
+                <h3>${animal.name || "Unnamed Animal"}</h3>
+
+                <p><strong>Location:</strong> ${animal.location}</p>
+
+                <p>${animal.description}</p>
+
+                <p class="date">${animal.date}</p>
+            </div>
+        `;
+
+        animalList.appendChild(card);
+    });
+
+    animals.reverse();
+}
+
+displayAnimals();
+
+form.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const file = document.getElementById("photo").files[0];
+
+    if (!file) {
+        alert("Please upload a photo.");
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function() {
+        const animal = {
+            type: document.getElementById("type").value,
+            name: document.getElementById("name").value,
+            location: document.getElementById("location").value,
+            description: document.getElementById("description").value,
+            photo: reader.result,
+            date: new Date().toLocaleString()
+        };
+
+        animals.push(animal);
+        saveAnimals();
+        displayAnimals();
+        form.reset();
+    };
+
+    reader.readAsDataURL(file);
+});
+</script>
+
+</body>
+</html>
